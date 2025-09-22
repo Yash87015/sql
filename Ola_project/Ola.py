@@ -71,6 +71,14 @@ try:
                 st.dataframe(top_customers_df)
 
 
+                st.subheader('Ride Distance Distribution Per Day')
+                ride_distance_distribution_query = "SELECT DATE(Date) as Ride_Date, AVG(Ride_Distance) AS Avg_Ride_Distance FROM ola_data GROUP BY Ride_Date ORDER BY Ride_Date"
+                ride_distance_distribution_df = run_query(ride_distance_distribution_query)
+                st.line_chart(ride_distance_distribution_df.set_index('Ride_Date'))
+
+
+
+
             # 4. Cancellation
             with st.expander("4. Cancellation Analysis"):
                 st.subheader('Total Cancelled Rides by Customer')
