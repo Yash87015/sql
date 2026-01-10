@@ -1,8 +1,12 @@
 import streamlit as st
 import pandas as pd
 import sqlite3 as sql
+import os
+import logging
 import matplotlib.pyplot as plt
 import seaborn as sns
+import warnings
+warnings.filterwarnings('ignore')
 
 # --- SQL Queries Embedded ---
 QUERIES = {
@@ -215,6 +219,10 @@ QUERIES = {
 }
 
 st.set_page_config(layout="wide")
+# Path to the SQLite database file
+DB_PATH = 'tennish.db'
+
+logging.basicConfig(level=logging.INFO)
 st.title("🎾 Tennis Data Explorer")
 
 # Function to connect to the database and load data
