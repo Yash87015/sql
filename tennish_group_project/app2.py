@@ -225,17 +225,34 @@ DB_PATH = 'tennish.db'
 logging.basicConfig(level=logging.INFO)
 st.title("🎾 Tennis Data Explorer")
 
+
 # Function to connect to the database and load data
 @st.cache_resource
 def get_connection():
-    return sql.connect('tennish.db')
+    return sql.connect(DB_PATH)
 
 @st.cache_data
 def load_data(query_str):
-    conn = get_connection()
-    df = pd.read_sql(query_str, conn)
-    conn.close()
-    return df
+    if not os.path.exists(DB_PATH):
+        st.error(f"Database file '{DB_PATH}' not found. Please place the SQLite database in the app directory.")
+        return pd.DataFrame()
+    conn = None
+    try:
+        # Create a fresh connection for this call to avoid SQLite "same thread" errors.
+        conn = sql.connect(DB_PATH, check_same_thread=False)
+        df = pd.read_sql(query_str, conn)
+        return df
+    except Exception as e:
+        logging.exception("Failed to execute SQL query")
+        st.error("Database query failed. Check that the database exists and contains the expected tables.")
+        st.exception(e)
+        return pd.DataFrame()
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 # Main application logic
 
