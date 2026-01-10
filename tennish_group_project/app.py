@@ -253,6 +253,4 @@ def load_data(query_str):
 # Main application logic
 
 
-else:
-    df = load_data(QUERIES[query_key])
-    st.dataframe(df)
+
