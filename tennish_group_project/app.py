@@ -270,5 +270,49 @@ def load_data(query, conn, params=None):
         st.error(f"Error executing SQL query: {e}")
         return pd.DataFrame()
 
+# --- User-friendly Query Names Mapping ---
+QUERY_NAMES = {
+    'competitions_with_categories': '1. List all competitions along with their category name',
+    'count_competitions_by_category': '2. Count the number of competitions in each category',
+    'doubles_competitions': "3. Find all competitions of type 'doubles'",
+    'itf_men_competitions': "4. Get competitions that belong to a specific category (e.g., ITF Men)",
+    'parent_sub_competitions': '5. Identify parent competitions and their sub-competitions',
+    'competition_type_by_category_distribution': '6. Analyze the distribution of competition types by category',
+    'top_level_competitions': '7. List all competitions with no parent (top-level competitions)',
+    'count_null_parent_id': '8. Count null parent_ids (Internal Check)',
+    'venues_with_complex_name': '9. List all venues along with their associated complex name',
+    'venue_count_by_complex': '10. Count the number of venues in each complex (Ascending)',
+    'venue_count_by_complex_desc': '11. Count the number of venues in each complex (Descending)',
+    'venues_in_chile': "12. Get details of venues in a specific country (e.g., Chile)",
+    'venues_timezones': '13. Identify all venues and their timezones',
+    'complex_more_than_one_venue': '14. Find complexes that have more than one venue',
+    'venues_grouped_by_country': '15. List venues grouped by country',
+    'venues_for_nacional_complex': "16. Find all venues for a specific complex (e.g., Nacional)",
+    'competitors_rank_points': '17. Get all competitors with their rank and points',
+    'top_5_competitors': '18. Find competitors ranked in the top 5',
+    'stable_rank_competitors': '19. List competitors with no rank movement (stable rank)',
+    'total_points_by_country': '20. Get the total points of competitors from a specific country',
+    'competitors_per_country': '21. Count the number of competitors per country',
+    'highest_points_current_week': '22. Find competitors with the highest points in the current week'
+}
 
+query_options = list(QUERY_NAMES.values())
+
+# --- Main application logic ---
+conn = get_db_connection()
+
+if conn:
+    selected_query_display_name = st.selectbox(
+        'Select a query to run:',
+        options=query_options
+    )
+
+    # Reverse map the display name back to the internal query key
+    selected_query_key = next((key for key, value in QUERY_NAMES.items() if value == selected_query_display_name), None)
+
+    if selected_query_key:
+        st.subheader(f"Results for: {selected_query_display_name}")
+
+else:
+    st.error("Could not connect to the database. Please check the database file.")
 
