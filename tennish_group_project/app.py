@@ -6,6 +6,8 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 
+st.set_page_config(layout="wide")
+
 # Connect to the database
 conn = sql.connect('tennish.db')
 
