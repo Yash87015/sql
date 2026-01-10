@@ -299,20 +299,221 @@ QUERY_NAMES = {
 query_options = list(QUERY_NAMES.values())
 
 # --- Main application logic ---
-conn = get_db_connection()
+def main():
+    # --- User-friendly Query Names Mapping ---
+    QUERY_NAMES = {
+        'competitions_with_categories': '1. List all competitions along with their category name',
+        'count_competitions_by_category': '2. Count the number of competitions in each category',
+        'doubles_competitions': "3. Find all competitions of type 'doubles'",
+        'competitions_by_category': "4. Get competitions that belong to a specific category",
+        'parent_sub_competitions': '5. Identify parent competitions and their sub-competitions',
+        'competition_type_by_category_distribution': '6. Analyze the distribution of competition types by category',
+        'top_level_competitions': '7. List all competitions with no parent (top-level competitions)',
+        'count_null_parent_id': '8. Count null parent_ids (Internal Check)',
+        'venues_with_complex_name': '9. List all venues along with their associated complex name',
+        'venue_count_by_complex': '10. Count the number of venues in each complex (Ascending)',
+        'venue_count_by_complex_desc': '11. Count the number of venues in each complex (Descending)',
+        'venues_by_country': "12. Get details of venues in a specific country",
+        'venues_timezones': '13. Identify all venues and their timezones',
+        'complex_more_than_one_venue': '14. Find complexes that have more than one venue',
+        'venues_grouped_by_country': '15. List venues grouped by country',
+        'venues_by_complex_name': "16. Find all venues for a specific complex",
+        'competitors_rank_points': '17. Get all competitors with their rank and points',
+        'top_5_competitors': '18. Find competitors ranked in the top 5',
+        'stable_rank_competitors': '19. List competitors with no rank movement (stable rank)',
+        'total_points_by_country': '20. Get the total points of competitors from a specific country',
+        'competitors_per_country': '21. Count the number of competitors per country',
+        'highest_points_current_week': '22. Find competitors with the highest points in the current week'
+    }
 
-if conn:
-    selected_query_display_name = st.selectbox(
-        'Select a query to run:',
-        options=query_options
-    )
+    query_options = list(QUERY_NAMES.values())
 
-    # Reverse map the display name back to the internal query key
-    selected_query_key = next((key for key, value in QUERY_NAMES.items() if value == selected_query_display_name), None)
+    conn = get_db_connection()
 
-    if selected_query_key:
-        st.subheader(f"Results for: {selected_query_display_name}")
+    if conn:
+        # --- Load dynamic filter options ---
+        all_category_names = load_data("SELECT DISTINCT category_name FROM categories ORDER BY category_name;", conn)['category_name'].tolist()
+        all_venue_countries = load_data("SELECT DISTINCT country FROM venues WHERE country IS NOT NULL AND country != '' ORDER BY country;", conn)['country'].tolist()
+        all_competitor_countries = load_data("SELECT DISTINCT country FROM competitors WHERE country IS NOT NULL AND country != '' ORDER BY country;", conn)['country'].tolist()
+        all_complex_names = load_data("SELECT DISTINCT complex_name FROM complexes WHERE complex_name IS NOT NULL AND complex_name != '' ORDER BY complex_name;", conn)['complex_name'].tolist()
 
-else:
-    st.error("Could not connect to the database. Please check the database file.")
+        selected_query_display_name = st.selectbox(
+            'Select a query to run:',
+            options=query_options
+        )
+
+        selected_query_key = next((key for key, value in QUERY_NAMES.items() if value == selected_query_display_name), None)
+
+        if selected_query_key:
+            st.subheader(f"Results for: {selected_query_display_name}")
+
+            # --- Conditional Display Logic ---
+            if selected_query_key == 'competitions_with_categories':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'count_competitions_by_category':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+                fig, ax = plt.subplots(figsize=(10, 6))
+                sns.barplot(x='competition_count', y='category_name', data=df.head(10), ax=ax, palette='viridis')
+                ax.set_title('Top 10 Categories by Competition Count')
+                ax.set_xlabel('Number of Competitions')
+                ax.set_ylabel('Category Name')
+                st.pyplot(fig)
+                plt.close(fig)
+
+            elif selected_query_key == 'doubles_competitions':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'competitions_by_category':
+                selected_category = st.selectbox(
+                    'Select a Category:',
+                    options=all_category_names,
+                    index=all_category_names.index('ITF Men') if 'ITF Men' in all_category_names else 0
+                )
+                df = load_data(QUERIES[selected_query_key], conn, params=[selected_category])
+                st.dataframe(df)
+
+            elif selected_query_key == 'parent_sub_competitions':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'competition_type_by_category_distribution':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+                
+                # Filter for visualization
+                selected_category_for_plot = st.selectbox(
+                    'Select a Category to visualize Type Distribution:',
+                    options=['All'] + all_category_names,
+                    index=0
+                )
+                if selected_category_for_plot != 'All':
+                    plot_df = df[df['Category'] == selected_category_for_plot]
+                else:
+                    plot_df = df
+
+                if not plot_df.empty:
+                    fig, ax = plt.subplots(figsize=(12, 7))
+                    sns.barplot(x='Total_Count', y='Competition_Type', hue='Category', data=plot_df.head(20), dodge=False, ax=ax, palette='coolwarm')
+                    ax.set_title(f'Competition Type Distribution for {selected_category_for_plot}')
+                    ax.set_xlabel('Total Count')
+                    ax.set_ylabel('Competition Type')
+                    plt.tight_layout()
+                    st.pyplot(fig)
+                    plt.close(fig)
+                else:
+                    st.info("No data to display for the selected category.")
+
+            elif selected_query_key == 'top_level_competitions':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'count_null_parent_id':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'venues_with_complex_name':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'venue_count_by_complex' or selected_query_key == 'venue_count_by_complex_desc':
+                min_venue_count = st.number_input('Minimum number of venues in a complex:', min_value=0, value=1)
+                df = load_data(QUERIES[selected_query_key], conn)
+                df_filtered = df[df['Venue_Count'] >= min_venue_count]
+                st.dataframe(df_filtered)
+                if not df_filtered.empty:
+                    fig, ax = plt.subplots(figsize=(12, 7))
+                    sns.barplot(x='Venue_Count', y='complex_name', data=df_filtered.head(10), ax=ax, palette='plasma')
+                    ax.set_title(f'Top 10 Complexes with at least {min_venue_count} Venues')
+                    ax.set_xlabel('Number of Venues')
+                    ax.set_ylabel('Complex Name')
+                    plt.tight_layout()
+                    st.pyplot(fig)
+                    plt.close(fig)
+                else:
+                    st.info("No complexes found matching the minimum venue count.")
+
+            elif selected_query_key == 'venues_by_country':
+                selected_country = st.selectbox(
+                    'Select a Country:',
+                    options=all_venue_countries,
+                    index=all_venue_countries.index('CHILE') if 'CHILE' in all_venue_countries else 0
+                )
+                df = load_data(QUERIES[selected_query_key], conn, params=[selected_country])
+                st.dataframe(df)
+
+            elif selected_query_key == 'venues_timezones':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'complex_more_than_one_venue':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'venues_grouped_by_country':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+                fig, ax = plt.subplots(figsize=(12, 7))
+                sns.barplot(x='venue_count', y='country', data=df.head(15), ax=ax, palette='magma')
+                ax.set_title('Top 15 Countries by Venue Count')
+                ax.set_xlabel('Number of Venues')
+                ax.set_ylabel('Country')
+                plt.tight_layout()
+                st.pyplot(fig)
+                plt.close(fig)
+
+            elif selected_query_key == 'venues_by_complex_name':
+                selected_complex = st.selectbox(
+                    'Select a Complex Name:',
+                    options=all_complex_names,
+                    index=all_complex_names.index('Nacional') if 'Nacional' in all_complex_names else 0
+                )
+                df = load_data(QUERIES[selected_query_key], conn, params=[selected_complex])
+                st.dataframe(df)
+
+            elif selected_query_key == 'competitors_rank_points':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'top_5_competitors':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'stable_rank_competitors':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+            elif selected_query_key == 'total_points_by_country':
+                selected_country = st.selectbox(
+                    'Select a Country for Competitor Points:',
+                    options=all_competitor_countries,
+                    index=all_competitor_countries.index('Croatia') if 'Croatia' in all_competitor_countries else 0
+                )
+                df = load_data(QUERIES[selected_query_key], conn, params=[selected_country])
+                st.dataframe(df)
+
+            elif selected_query_key == 'competitors_per_country':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+                fig, ax = plt.subplots(figsize=(12, 7))
+                sns.barplot(x='competitor_count', y='country', data=df.head(15), ax=ax, palette='cividis')
+                ax.set_title('Top 15 Countries by Competitor Count')
+                ax.set_xlabel('Number of Competitors')
+                ax.set_ylabel('Country')
+                plt.tight_layout()
+                st.pyplot(fig)
+                plt.close(fig)
+
+            elif selected_query_key == 'highest_points_current_week':
+                df = load_data(QUERIES[selected_query_key], conn)
+                st.dataframe(df)
+
+    else:
+        st.error("Could not connect to the database. Please check the database file.")
+
+if __name__ == "__main__":
+    main()
 
