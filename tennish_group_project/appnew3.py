@@ -493,7 +493,7 @@ def main():
             # Overall distribution of competition types (Pie Chart)
             type_dist_df = load_data(QUERIES['competition_types_overall_distribution'])
             if not type_dist_df.empty:
-                fig, ax = plt.subplots(figsize=(8, 8))
+                fig, ax = plt.subplots(figsize=(4, 5))
                 ax.pie(type_dist_df['type_count'], labels=type_dist_df['type'], autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'black'})
                 ax.set_title('Overall Distribution of Competition Types')
                 st.pyplot(fig)
