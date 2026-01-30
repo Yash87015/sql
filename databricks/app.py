@@ -55,7 +55,7 @@ with st.sidebar:
     st.caption("Data Source: Databricks Delta Lake (Gold Layer)")
     
     st.divider()
-    st.markdown("[View Source Code](https://github.com/your-username/your-repo)")
+    st.markdown("[View Source Code](https://github.com/Yash87015/sq)")
 
 # --- MAIN DASHBOARD LOGIC ---
 st.title("🛡️ Executive Fraud Monitor")
