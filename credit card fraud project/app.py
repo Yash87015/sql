@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from databricks import sql
+from databricks.sql import connect
 import os
 
 # --- PAGE CONFIGURATION ---
@@ -28,7 +28,7 @@ st.markdown("""
 @st.cache_data(ttl=3600) # Cache data for 1 hour to speed up app
 def get_data(query):
     try:
-        connection = sql.connect(
+        connection = connect(
             server_hostname = st.secrets["DATABRICKS_SERVER"],
             http_path       = st.secrets["DATABRICKS_HTTP_PATH"],
             access_token    = st.secrets["DATABRICKS_TOKEN"]
