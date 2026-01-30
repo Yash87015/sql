@@ -1,4 +1,4 @@
-streamlit
-pandas
-databricks-sql-connector
-plotly
+streamlit>=1.53.0
+pandas>=2.0.0
+databricks-sql-connector>=0.4.0
+plotly>=5.0.0
