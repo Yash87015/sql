@@ -5,12 +5,11 @@ import os
 from datetime import datetime, timedelta
 import numpy as np
 
-# Try to import databricks connector (optional)
-try:
-    from databricks.sql import connect
-    DATABRICKS_AVAILABLE = True
-except ImportError:
-    DATABRICKS_AVAILABLE = False
+# Databricks connector - optional for production
+# If you want to use Databricks, uncomment below and add to requirements.txt:
+# from databricks.sql import connect
+# DATABRICKS_AVAILABLE = True
+DATABRICKS_AVAILABLE = False
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
