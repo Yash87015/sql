@@ -1,7 +1,15 @@
 import streamlit as st
 import pandas as pd
-from databricks.sql import connect
+import plotly.express as px
 import os
+
+# Try to import databricks connector
+try:
+    from databricks.sql import connect
+    DATABRICKS_AVAILABLE = True
+except ImportError:
+    DATABRICKS_AVAILABLE = False
+    st.warning("⚠️ Databricks SQL connector not installed. Please ensure 'databricks-sql-connector' is in requirements.txt")
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -27,6 +35,10 @@ st.markdown("""
 # This uses Streamlit Secrets. DO NOT hardcode keys here.
 @st.cache_data(ttl=3600) # Cache data for 1 hour to speed up app
 def get_data(query):
+    if not DATABRICKS_AVAILABLE:
+        st.error("Databricks connector is not available")
+        return pd.DataFrame()
+    
     try:
         connection = connect(
             server_hostname = st.secrets["DATABRICKS_SERVER"],
